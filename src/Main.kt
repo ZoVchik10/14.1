@@ -1,103 +1,62 @@
 import java.io.File
+import java.util.Scanner
 
 fun main() {
-    val fileName = "strings.txt"
-    val file = File(fileName)
+    val file = File("FileTask")
+    val scanner = Scanner(System.`in`)
+    val lines = mutableListOf<String>()
     while (true) {
-        println("Хотите добавить строку в файл? (да/нет):")
-        val answer = readlnOrNull()?.lowercase()
-
-        if (answer == "да") {
-            println("Введите строку:")
-            val line = readlnOrNull()?.trim() ?: ""
-
-            if (file.exists()) {
-                file.appendText("$line\n")
-            } else {
-                file.writeText("$line\n")
+        println("добавить строку? (1.Да 2.Нет)")
+        val answer = scanner.nextLine()
+        when (answer) {
+            "1" -> { //добавление строки
+                println("Введите строку:")
+                val line = scanner.nextLine()
+                lines.add(line)
             }
-        } else if (answer == "нет") {
-            break
-        } else {
-            println("Пожалуйста, ответьте 'да' или 'нет'")
+            "2" -> break //выход из цикла
+            else -> println("Некорректный ввод")
         }
     }
+    file.writeText(lines.joinToString("\n"))//объединение всех строк в одну
+    val totalLines = lines.size//считает кол-во строк
+    val wordsCount = lines.map { it.split(" ").size }
+    val maxWords = if (wordsCount.isNotEmpty()) wordsCount.maxOrNull()!! else 0//проверяет,не пустой ли список и наход макс. знач.
+    val minWords = if (wordsCount.isNotEmpty()) wordsCount.minOrNull()!! else 0//проверяет,не пустой ли список и наход мин. знач
 
-    val lines = if (file.exists()) {
-        file.readLines().filter { it.isNotBlank() }
-    } else {
-        emptyList()
+    println("\nОбщее количество строк: $totalLines")
+    println("Максимальное количество слов: $maxWords")
+    println("Минимальное количество слов: $minWords")
+    println("Содержимое файла:")
+    lines.forEachIndexed { index, line ->//дает нумерацию чему-то из списка
+        println("${index + 1}: $line")//нумерация строк начинатся с 1
     }
-
-    if (lines.isEmpty()) {
-        println("Файл пуст.")
-        return
-    }
-
-    println("\n=== СОДЕРЖИМОЕ ФАЙЛА ===")
-    lines.forEachIndexed { index, line ->
-        println("${index + 1}: $line")
-    }
-
-    val wordCounts = lines.map { it.split("\\s+".toRegex()).filter { word -> word.isNotBlank() }.size }
-
-    val maxWords = wordCounts.maxOrNull() ?: 0
-    val minWords = wordCounts.minOrNull() ?: 0
-
-    println("\n=== ИНФОРМАЦИЯ О ФАЙЛЕ ===")
-    println("Общее количество строк: ${lines.size}")
-    println("Максимальное количество слов в строке: $maxWords")
-    println("Минимальное количество слов в строке: $minWords")
-
-    println("\nКоличество слов в каждой строке:")
-    wordCounts.forEachIndexed { index, count ->
-        println("Строка ${index + 1}: $count слов")
-    }
-
-    while (true) {
-        println("\nХотите заменить строку? (да/нет):")
-        val answer = readlnOrNull()?.lowercase()
-
-        if (answer == "да") {
-            println("Введите номер строки для замены (1-${lines.size}):")
-            val lineNumber = readlnOrNull()?.toIntOrNull()
-
-            if (lineNumber == null || lineNumber < 1 || lineNumber > lines.size) {
-                println("Неверный номер строки. Должно быть число от 1 до ${lines.size}")
-                continue
-            }
-
+    println("\nЖелаете заменить строку? (да/нет)")
+    val answerReplace = scanner.nextLine().trim().lowercase()//в независимости от написания помогает коду понять
+    if (answerReplace == "да" || answerReplace == "д" || answerReplace == "yes" || answerReplace == "y") {//возможные варианты ответа
+        println("Введите номер строки для замены (от 1 до $totalLines):")
+        val lineNumberInput = scanner.nextLine()//то что введено с клавиатуры пользователем
+        val lineNumber = lineNumberInput.toIntOrNull()//преобразование строки в число
+        if (lineNumber != null && lineNumber in 1..totalLines) {//проверяет введно ли число и что число в диапозоне от 1 до ...
             println("Введите новую строку:")
-            val newLine = readlnOrNull()?.trim() ?: ""
-
-            val updatedLines = lines.toMutableList()
-            updatedLines[lineNumber - 1] = newLine
-
-            val cleanedLines = updatedLines.filter { it.isNotBlank() }
-            file.writeText(cleanedLines.joinToString("\n"))
-
-            println("\n=== ОБНОВЛЕННОЕ СОДЕРЖИМОЕ ФАЙЛА ===")
-            cleanedLines.forEachIndexed { index, line ->
-                println("${index + 1}: $line")
+            val newLine = scanner.nextLine()
+            lines[lineNumber - 1] = newLine//обращение к элементу из списка по индексу
+            file.writeText(lines.joinToString("\n"))//перезапись файла с новыми данными
+            println("\nОбновленное содержимое файла:")
+            lines.forEachIndexed { index, line ->
+                println("${index + 1}: $line")//вывод обновленных данных
             }
 
-            val newWordCounts = cleanedLines.map {
-                it.split("\\s+".toRegex()).filter { word -> word.isNotBlank() }.size
-            }
+            val newTotalLines = lines.size
+            val newWordsCount = lines.map { it.split(" ").size }
+            val newMaxWords = if (newWordsCount.isNotEmpty()) newWordsCount.maxOrNull()!! else 0
+            val newMinWords = if (newWordsCount.isNotEmpty()) newWordsCount.minOrNull()!! else 0
+            println("\nОбщее количество строк: $newTotalLines")
+            println("Максимальное количество: $newMaxWords")
+            println("Минимальное количество: $newMinWords")//пересчет и вывод новой статы
 
-            println("\nКоличество слов в каждой строке:")
-            newWordCounts.forEachIndexed { index, count ->
-                println("Строка ${index + 1}: $count слов")
-            }
-
-            break
-
-        } else if (answer == "нет") {
-            break
         } else {
-            println("Пожалуйста, ответьте 'да' или 'нет'")
+            println("Некорректный номер")
         }
     }
-
-    println("\nПрограмма завершена.")
 }
